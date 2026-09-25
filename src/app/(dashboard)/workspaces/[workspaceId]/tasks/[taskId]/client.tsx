@@ -19,7 +19,7 @@ export const TaskIdClient = () => {
   }
 
   if (!data) {
-    return <PageError message="Task not found" />
+    return <PageError message="Story not found" />
   }
 
   return (

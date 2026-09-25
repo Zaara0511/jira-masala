@@ -19,19 +19,19 @@ export const useDeleteTask = () => {
       const response = await client.api.tasks[":taskId"]["$delete"]({ param });
 
       if (!response.ok) {
-        throw new Error("Failed to delete task");
+        throw new Error("Failed to delete story");
       }
 
       return await response.json();
     },
     onSuccess: ({ data }) => {
-      toast.success("Task deleted");
+      toast.success("Story deleted");
 
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["task", data.$id] });
     },
     onError: () => {
-      toast.error("Failed to delete task");
+      toast.error("Failed to delete story");
     }
   });
 

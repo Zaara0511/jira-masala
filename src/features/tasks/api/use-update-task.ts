@@ -19,19 +19,19 @@ export const useUpdateTask = () => {
       const response = await client.api.tasks[":taskId"]["$patch"]({ json, param });
 
       if (!response.ok) {
-        throw new Error("Failed to updated task");
+        throw new Error("Failed to update story");
       }
 
       return await response.json();
     },
     onSuccess: ({ data }) => {
-      toast.success("Task updated");
+      toast.success("Story updated");
 
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["task", data.$id] });
     },
     onError: () => {
-      toast.error("Failed to update task");
+      toast.error("Failed to update story");
     }
   });
 

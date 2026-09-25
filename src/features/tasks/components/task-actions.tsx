@@ -27,7 +27,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
   const { open } = useEditTaskModal();
   
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete task",
+    "Delete story",
     "This action cannot be undone.",
     "destructive"
   );
@@ -61,7 +61,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
             className="font-medium p-[10px]"
           >
             <ExternalLinkIcon className="size-4 mr-2 stroke-2" />
-            Task Details
+            Story Details
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onOpenProject}
@@ -75,7 +75,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
             className="font-medium p-[10px]"
           >
             <PencilIcon className="size-4 mr-2 stroke-2" />
-            Edit Task
+            Edit Story
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}
@@ -83,7 +83,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
             className="text-amber-700 focus:text-amber-700 font-medium p-[10px]"
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />
-            Delete Task
+            Delete Story
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

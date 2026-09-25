@@ -64,7 +64,7 @@ export const EditTaskForm = ({ onCancel, projectOptions, memberOptions, initialV
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
         <CardTitle className="text-xl font-bold">
-          Edit a task
+          Edit a story
         </CardTitle>
       </CardHeader>
       <div className="px-7">
@@ -80,12 +80,12 @@ export const EditTaskForm = ({ onCancel, projectOptions, memberOptions, initialV
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Task Name
+                      Story Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="Enter task name"
+                        placeholder="Enter story name"
                       />
                     </FormControl>
                     <FormMessage />

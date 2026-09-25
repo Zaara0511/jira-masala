@@ -64,7 +64,7 @@ export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: Crea
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
         <CardTitle className="text-xl font-bold">
-          Create a new task
+          Create a new story
         </CardTitle>
       </CardHeader>
       <div className="px-7">
@@ -80,12 +80,12 @@ export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: Crea
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Task Name
+                      Story Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="Enter task name"
+                        placeholder="Enter story name"
                       />
                     </FormControl>
                     <FormMessage />
@@ -231,7 +231,7 @@ export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: Crea
                 type="submit"
                 size="lg"
               >
-                Create Task
+                Create Story
               </Button>
             </div>
           </form>
