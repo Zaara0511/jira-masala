@@ -1,4 +1,4 @@
-import { FolderIcon, ListChecksIcon, UserIcon } from "lucide-react";
+import { FolderIcon, ListChecksIcon, ScaleIcon, UserIcon } from "lucide-react";
 
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
@@ -36,14 +36,15 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
 
   const memberOptions = members?.documents.map((member) => ({
     value: member.$id,
-    label: member.name,
+    label: member.designation ? `${member.name} (${member.designation})` : member.name,
   }));
 
   const [{
     status,
     assigneeId,
     projectId,
-    dueDate
+    dueDate,
+    weight,
   }, setFilters] = useTaskFilters();
 
   const onStatusChange = (value: string) => {
@@ -58,7 +59,12 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
     setFilters({ projectId: value === "all" ? null : value as string });
   };
 
+  const onWeightChange = (value: string) => {
+    setFilters({ weight: value === "all" ? null : value });
+  };
+
   if (isLoading) return null;
+
 
   return (
     <div className="flex flex-col lg:flex-row gap-2">
@@ -124,6 +130,53 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
           </SelectContent>
         </Select>
       )}
+      <Select
+        defaultValue={weight ?? undefined}
+        onValueChange={(value) => onWeightChange(value)}
+      >
+        <SelectTrigger className="w-full lg:w-auto h-8">
+          <div className="flex items-center pr-2">
+            <ScaleIcon className="size-4 mr-2" />
+            <SelectValue placeholder="All weights" />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All weights</SelectItem>
+          <SelectSeparator />
+          <SelectItem value="5">
+            <div className="flex items-center gap-x-2">
+              <span className="size-2 rounded-full bg-red-500" />
+              <span>5 · Critical</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="4">
+            <div className="flex items-center gap-x-2">
+              <span className="size-2 rounded-full bg-orange-500" />
+              <span>4 · High</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="3">
+            <div className="flex items-center gap-x-2">
+              <span className="size-2 rounded-full bg-amber-500" />
+              <span>3 · Medium</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="2">
+            <div className="flex items-center gap-x-2">
+              <span className="size-2 rounded-full bg-blue-500" />
+              <span>2 · Low</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="1">
+            <div className="flex items-center gap-x-2">
+              <span className="size-2 rounded-full bg-slate-500" />
+              <span>1 · Very Low</span>
+            </div>
+          </SelectItem>
+          <SelectSeparator />
+          <SelectItem value="unweighted">Unweighted</SelectItem>
+        </SelectContent>
+      </Select>
       <DatePicker
         placeholder="Due date"
         className="h-8 w-full lg:w-auto"
@@ -135,3 +188,4 @@ export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
     </div>
   );
 };
+

@@ -8,6 +8,14 @@ export enum TaskStatus {
   DONE = "DONE"
 };
 
+export enum TaskWeight {
+  VERY_LOW = 1,
+  LOW = 2,
+  MEDIUM = 3,
+  HIGH = 4,
+  CRITICAL = 5,
+};
+
 export type Task = Models.Document & {
   name: string;
   status: TaskStatus;
@@ -17,4 +25,6 @@ export type Task = Models.Document & {
   position: number;
   dueDate: string;
   description?: string;
+  weight?: number;
 };
+

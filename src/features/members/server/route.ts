@@ -107,10 +107,16 @@ const app = new Hono()
   .patch(
     "/:memberId",
     sessionMiddleware,
-    zValidator("json", z.object({ role: z.nativeEnum(MemberRole) })),
+    zValidator(
+      "json",
+      z.object({
+        role: z.nativeEnum(MemberRole).optional(),
+        designation: z.string().trim().max(100).optional().nullable(),
+      })
+    ),
     async (c) => {
       const { memberId } = c.req.param();
-      const { role } = c.req.valid("json");
+      const { role, designation } = c.req.valid("json");
       const user = c.get("user");
       const databases = c.get("databases");
 
@@ -140,17 +146,23 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
       
-      if (allMembersInWorkspace.total === 1) {
+      if (role && role !== memberToUpdate.role && allMembersInWorkspace.total === 1) {
         return c.json({ error: "Cannot downgrade the only member" }, 400);
+      }
+
+      const updateData: { role?: MemberRole; designation?: string } = {};
+      if (role !== undefined) {
+        updateData.role = role;
+      }
+      if (designation !== undefined) {
+        updateData.designation = designation || "";
       }
 
       await databases.updateDocument(
         DATABASE_ID,
         MEMBERS_ID,
         memberId,
-        {
-          role,
-        }
+        updateData,
       );
 
       return c.json({ data: { $id: memberToUpdate.$id } });

@@ -12,8 +12,10 @@ import { snakeCaseToTitleCase } from "@/lib/utils";
 
 import { TaskDate } from "./task-date";
 import { TaskActions } from "./task-actions";
+import { TaskWeightBadge } from "./task-weight-badge";
 
 import { Task } from "../types";
+
 
 export const columns: ColumnDef<Task>[] = [
   {
@@ -130,6 +132,30 @@ export const columns: ColumnDef<Task>[] = [
     }
   },
   {
+    accessorKey: "weight",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Weight
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const weight = row.original.weight;
+
+      return <TaskWeightBadge weight={weight} />
+    },
+    sortingFn: (rowA, rowB) => {
+      const weightA = rowA.original.weight ?? 0;
+      const weightB = rowB.original.weight ?? 0;
+      return weightA - weightB;
+    }
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const id = row.original.$id;
@@ -145,3 +171,4 @@ export const columns: ColumnDef<Task>[] = [
     }
   }
 ];
+

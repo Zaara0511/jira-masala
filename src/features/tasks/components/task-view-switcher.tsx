@@ -33,7 +33,8 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
     status,
     assigneeId,
     projectId,
-    dueDate
+    dueDate,
+    weight,
   }] = useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
     defaultValue: "table",
@@ -54,7 +55,9 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
     assigneeId,
     status,
     dueDate,
+    weight,
   });
+
 
   const onKanbanChange = useCallback((
     tasks: { $id: string; status: TaskStatus; position: number }[]

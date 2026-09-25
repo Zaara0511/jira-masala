@@ -11,6 +11,7 @@ interface UseGetTasksProps {
   search?: string | null;
   assigneeId?: string | null;
   dueDate?: string | null;
+  weight?: string | null;
 };
 
 export const useGetTasks = ({
@@ -19,7 +20,8 @@ export const useGetTasks = ({
   status,
   search,
   assigneeId,
-  dueDate
+  dueDate,
+  weight,
 }: UseGetTasksProps) => {
   const query = useQuery({
     queryKey: [
@@ -30,6 +32,7 @@ export const useGetTasks = ({
       search,
       assigneeId,
       dueDate,
+      weight,
     ],
     queryFn: async () => {
       const response = await client.api.tasks.$get({
@@ -40,8 +43,10 @@ export const useGetTasks = ({
           assigneeId: assigneeId ?? undefined,
           search: search ?? undefined,
           dueDate: dueDate ?? undefined,
+          weight: weight ?? undefined,
         },
       });
+
 
       if (!response.ok) {
         throw new Error("Failed to fetch tasks");

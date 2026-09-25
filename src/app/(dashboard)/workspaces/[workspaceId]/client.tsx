@@ -15,6 +15,8 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateTaskModal } from "@/features/tasks/hooks/use-create-task-modal";
 import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 import { useGetWorkspaceAnalytics } from "@/features/workspaces/api/use-get-workspace-analytics";
+import { TaskWeightBadge } from "@/features/tasks/components/task-weight-badge";
+
 
 import { Button } from "@/components/ui/button";
 import { PageError } from "@/components/page-error";
@@ -85,7 +87,13 @@ export const TaskList = ({ data, total }: TaskListProps) => {
               <Link href={`/workspaces/${workspaceId}/tasks/${task.$id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="p-4">
-                    <p className="text-lg font-medium truncate">{task.name}</p>
+                    <div className="flex items-center justify-between gap-x-2">
+                      <p className="text-lg font-medium truncate">{task.name}</p>
+                      {task.weight ? (
+                        <TaskWeightBadge weight={task.weight} className="shrink-0" />
+                      ) : null}
+                    </div>
+
                     <div className="flex items-center gap-x-2">
                       <p>{task.project?.name}</p>
                       <div className="size-1 rounded-full bg-neutral-300" />
@@ -98,6 +106,7 @@ export const TaskList = ({ data, total }: TaskListProps) => {
                     </div>
                   </CardContent>
                 </Card>
+
               </Link>
             </li>
           ))}

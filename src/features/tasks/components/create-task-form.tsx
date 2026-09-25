@@ -37,7 +37,7 @@ import { useCreateTask } from "../api/use-create-task";
 interface CreateTaskFormProps {
   onCancel?: () => void;
   projectOptions: { id: string, name: string, imageUrl: string }[];
-  memberOptions: { id: string, name: string }[];
+  memberOptions: { id: string, name: string, designation?: string }[];
 };
 
 export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: CreateTaskFormProps) => {
@@ -133,7 +133,14 @@ export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: Crea
                                 className="size-6"
                                 name={member.name}
                               />
-                              {member.name}
+                              <div className="flex items-center gap-x-1.5">
+                                <span>{member.name}</span>
+                                {member.designation && (
+                                  <span className="text-xs text-muted-foreground font-normal">
+                                    ({member.designation})
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -213,7 +220,65 @@ export const CreateTaskForm = ({ onCancel, projectOptions, memberOptions }: Crea
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="weight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Weight
+                    </FormLabel>
+                    <Select
+                      defaultValue={field.value ? String(field.value) : undefined}
+                      onValueChange={(val) => field.onChange(val === "none" ? undefined : Number(val))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select weight (Optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <FormMessage />
+                      <SelectContent>
+                        <SelectItem value="none">
+                          <span className="text-muted-foreground">No weight (Unassigned)</span>
+                        </SelectItem>
+                        <SelectItem value="5">
+                          <div className="flex items-center gap-x-2">
+                            <span className="size-2 rounded-full bg-red-500" />
+                            <span>5 · Critical</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="4">
+                          <div className="flex items-center gap-x-2">
+                            <span className="size-2 rounded-full bg-orange-500" />
+                            <span>4 · High</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="3">
+                          <div className="flex items-center gap-x-2">
+                            <span className="size-2 rounded-full bg-amber-500" />
+                            <span>3 · Medium</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="2">
+                          <div className="flex items-center gap-x-2">
+                            <span className="size-2 rounded-full bg-blue-500" />
+                            <span>2 · Low</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="1">
+                          <div className="flex items-center gap-x-2">
+                            <span className="size-2 rounded-full bg-slate-500" />
+                            <span>1 · Very Low</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
             </div>
+
             <DottedSeparator className="py-7" />
             <div className="flex items-center justify-between">
               <Button

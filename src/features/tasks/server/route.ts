@@ -59,6 +59,7 @@ const app = new Hono()
         status: z.nativeEnum(TaskStatus).nullish(),
         search: z.string().nullish(),
         dueDate: z.string().nullish(),
+        weight: z.string().nullish(),
       })
     ),
     async (c) => {
@@ -73,6 +74,7 @@ const app = new Hono()
         search,
         assigneeId,
         dueDate,
+        weight,
       } = c.req.valid("query");
 
       const member = await getMember({
@@ -115,11 +117,51 @@ const app = new Hono()
         query.push(Query.search("name", search));
       }
 
-      const tasks = await databases.listDocuments<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        query,
-      );
+      const hasWeightFilter = !!weight && weight !== "all";
+      let weightQueryAdded = false;
+
+      if (hasWeightFilter) {
+        if (weight === "unweighted") {
+          query.push(Query.isNull("weight"));
+          weightQueryAdded = true;
+        } else {
+          const numWeight = parseInt(weight, 10);
+          if (!isNaN(numWeight)) {
+            query.push(Query.equal("weight", numWeight));
+            weightQueryAdded = true;
+          }
+        }
+      }
+
+      let tasks;
+      try {
+        tasks = await databases.listDocuments<Task>(
+          DATABASE_ID,
+          TASKS_ID,
+          query,
+        );
+      } catch (error: unknown) {
+        // Fallback for when the 'weight' attribute / index does not exist in Appwrite yet
+        if (weightQueryAdded) {
+          const fallbackQuery = query.slice(0, -1);
+          tasks = await databases.listDocuments<Task>(
+            DATABASE_ID,
+            TASKS_ID,
+            fallbackQuery,
+          );
+
+          if (weight === "unweighted") {
+            tasks.documents = tasks.documents.filter((task) => !task.weight);
+          } else if (weight) {
+            const numWeight = parseInt(weight, 10);
+            tasks.documents = tasks.documents.filter((task) => task.weight === numWeight);
+          }
+          tasks.total = tasks.documents.length;
+        } else {
+          throw error;
+        }
+      }
+
 
       const projectIds = tasks.documents.map((task) => task.projectId);
       const assigneeIds = tasks.documents.map((task) => task.assigneeId);
@@ -184,7 +226,9 @@ const app = new Hono()
         workspaceId,
         projectId,
         dueDate,
-        assigneeId
+        assigneeId,
+        description,
+        weight,
       } = c.req.valid("json");
 
       const member = await getMember({
@@ -213,20 +257,46 @@ const app = new Hono()
           ? highestPositionTask.documents[0].position + 1000
           : 1000;
 
-      const task = await databases.createDocument(
-        DATABASE_ID,
-        TASKS_ID,
-        ID.unique(),
-        {
-          name,
-          status,
-          workspaceId,
-          projectId,
-          dueDate,
-          assigneeId,
-          position: newPosition
-        },
-      );
+      const documentPayload: Record<string, unknown> = {
+        name,
+        status,
+        workspaceId,
+        projectId,
+        dueDate,
+        assigneeId,
+        position: newPosition,
+      };
+
+      if (description) {
+        documentPayload.description = description;
+      }
+
+      if (weight !== undefined && weight !== null) {
+        documentPayload.weight = weight;
+      }
+
+      let task;
+      try {
+        task = await databases.createDocument(
+          DATABASE_ID,
+          TASKS_ID,
+          ID.unique(),
+          documentPayload,
+        );
+      } catch (error: unknown) {
+        const errMessage = (error as { message?: string })?.message;
+        if (documentPayload.weight !== undefined && errMessage?.includes("weight")) {
+          delete documentPayload.weight;
+          task = await databases.createDocument(
+            DATABASE_ID,
+            TASKS_ID,
+            ID.unique(),
+            documentPayload,
+          );
+        } else {
+          throw error;
+        }
+      }
 
       return c.json({ data: task });
     }
@@ -244,7 +314,8 @@ const app = new Hono()
         description,
         projectId,
         dueDate,
-        assigneeId
+        assigneeId,
+        weight,
       } = c.req.valid("json");
       const { taskId } = c.req.param();
 
@@ -264,19 +335,41 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const task = await databases.updateDocument<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        taskId,
-        {
-          name,
-          status,
-          projectId,
-          dueDate,
-          assigneeId,
-          description,
-        },
-      );
+      const updatePayload: Record<string, unknown> = {
+        name,
+        status,
+        projectId,
+        dueDate,
+        assigneeId,
+        description,
+      };
+
+      if (weight !== undefined) {
+        updatePayload.weight = weight;
+      }
+
+      let task;
+      try {
+        task = await databases.updateDocument<Task>(
+          DATABASE_ID,
+          TASKS_ID,
+          taskId,
+          updatePayload,
+        );
+      } catch (error: unknown) {
+        const errMessage = (error as { message?: string })?.message;
+        if (updatePayload.weight !== undefined && errMessage?.includes("weight")) {
+          delete updatePayload.weight;
+          task = await databases.updateDocument<Task>(
+            DATABASE_ID,
+            TASKS_ID,
+            taskId,
+            updatePayload,
+          );
+        } else {
+          throw error;
+        }
+      }
 
       return c.json({ data: task });
     }

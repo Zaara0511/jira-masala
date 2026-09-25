@@ -9,6 +9,7 @@ import { DottedSeparator } from "@/components/dotted-separator";
 
 import { TaskDate } from "./task-date";
 import { OverviewProperty } from "./overview-property";
+import { TaskWeightBadge } from "./task-weight-badge";
 
 import { Task } from "../types";
 import { useEditTaskModal } from "../hooks/use-edit-task-modal";
@@ -49,8 +50,12 @@ export const TaskOverview = ({
               {snakeCaseToTitleCase(task.status)}
             </Badge>
           </OverviewProperty>
+          <OverviewProperty label="Weight">
+            <TaskWeightBadge weight={task.weight} />
+          </OverviewProperty>
         </div>
       </div>
     </div>
   );
 };
+

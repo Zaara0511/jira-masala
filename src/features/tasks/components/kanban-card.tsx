@@ -7,6 +7,7 @@ import { DottedSeparator } from "@/components/dotted-separator";
 
 import { TaskDate } from "./task-date";
 import { TaskActions } from "./task-actions";
+import { TaskWeightBadge } from "./task-weight-badge";
 
 import { Task } from "../types";
 
@@ -32,14 +33,20 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
         <div className="size-1 rounded-full bg-neutral-300" />
         <TaskDate value={task.dueDate} className="text-xs" />
       </div>
-      <div className="flex items-center gap-x-1.5">
-        <ProjectAvatar
-          name={task.project.name}
-          image={task.project.imageUrl}
-          fallbackClassName="text-[10px]"
-        />
-        <span className="text-xs font-medium">{task.project.name}</span>
+      <div className="flex items-center justify-between gap-x-2">
+        <div className="flex items-center gap-x-1.5 min-w-0">
+          <ProjectAvatar
+            name={task.project.name}
+            image={task.project.imageUrl}
+            fallbackClassName="text-[10px]"
+          />
+          <span className="text-xs font-medium truncate">{task.project.name}</span>
+        </div>
+        {task.weight ? (
+          <TaskWeightBadge weight={task.weight} className="shrink-0" />
+        ) : null}
       </div>
     </div>
   );
 };
+

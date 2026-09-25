@@ -9,5 +9,7 @@ export const useTaskFilters = () => {
     assigneeId: parseAsString,
     search: parseAsString,
     dueDate: parseAsString,
+    weight: parseAsString,
   });
 };
+

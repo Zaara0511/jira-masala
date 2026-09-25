@@ -10,4 +10,10 @@ export const createTaskSchema = z.object({
   dueDate: z.coerce.date(),
   assigneeId: z.string().trim().min(1, "Required"),
   description: z.string().optional(),
+  weight: z
+    .preprocess(
+      (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+      z.number().int().min(1).max(5).optional()
+    ),
 });
+
