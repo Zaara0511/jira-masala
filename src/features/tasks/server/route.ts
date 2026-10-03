@@ -285,7 +285,9 @@ const app = new Hono()
         );
       } catch (error: unknown) {
         const errMessage = (error as { message?: string })?.message;
-        if (documentPayload.weight !== undefined && errMessage?.includes("weight")) {
+        console.error("Error creating document in Appwrite:", error);
+        if (documentPayload.weight !== undefined && errMessage?.toLowerCase().includes("weight")) {
+          console.warn("Appwrite Tasks collection is missing the 'weight' attribute! Document will be saved without weight until the attribute is created in Appwrite Console.");
           delete documentPayload.weight;
           task = await databases.createDocument(
             DATABASE_ID,
@@ -297,6 +299,7 @@ const app = new Hono()
           throw error;
         }
       }
+
 
       return c.json({ data: task });
     }
@@ -358,7 +361,9 @@ const app = new Hono()
         );
       } catch (error: unknown) {
         const errMessage = (error as { message?: string })?.message;
-        if (updatePayload.weight !== undefined && errMessage?.includes("weight")) {
+        console.error("Error updating document in Appwrite:", error);
+        if (updatePayload.weight !== undefined && errMessage?.toLowerCase().includes("weight")) {
+          console.warn("Appwrite Tasks collection is missing the 'weight' attribute! Document will be saved without weight until the attribute is created in Appwrite Console.");
           delete updatePayload.weight;
           task = await databases.updateDocument<Task>(
             DATABASE_ID,
@@ -370,6 +375,7 @@ const app = new Hono()
           throw error;
         }
       }
+
 
       return c.json({ data: task });
     }

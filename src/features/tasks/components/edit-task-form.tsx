@@ -229,9 +229,10 @@ export const EditTaskForm = ({ onCancel, projectOptions, memberOptions, initialV
                       Weight
                     </FormLabel>
                     <Select
-                      defaultValue={field.value ? String(field.value) : "none"}
+                      value={field.value !== undefined && field.value !== null ? String(field.value) : "none"}
                       onValueChange={(val) => field.onChange(val === "none" ? undefined : Number(val))}
                     >
+
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select weight (Optional)" />
