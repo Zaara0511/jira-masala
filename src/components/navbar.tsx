@@ -6,6 +6,9 @@ import { UserButton } from "@/features/auth/components/user-button";
 
 import { MobileSidebar } from "./mobile-sidebar";
 
+import { GlobalSearch } from "@/features/search/components/global-search";
+import { NotificationDropdown } from "@/features/notifications/components/notification-dropdown";
+
 const pathnameMap = {
   "tasks": {
     title: "My Stories",
@@ -40,7 +43,11 @@ export const Navbar = () => {
         </p>
       </div>
       <MobileSidebar />
-      <UserButton />
+      <div className="flex items-center gap-x-4">
+        <GlobalSearch />
+        <NotificationDropdown />
+        <UserButton />
+      </div>
     </nav>
   );
 };

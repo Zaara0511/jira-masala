@@ -2,6 +2,10 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
+import { createActivity } from "@/features/activities/server/service";
+import { EventCategory, EventAction } from "@/features/activities/types";
+import { createNotification } from "@/features/notifications/server/service";
+import { NotificationType } from "@/features/notifications/types";
 
 import { getMember } from "@/features/members/utils";
 import { Project } from "@/features/projects/types";
@@ -43,6 +47,21 @@ const app = new Hono()
         TASKS_ID,
         taskId,
       );
+
+      await createActivity({
+        databases,
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.TASKS,
+        action: EventAction.DELETED,
+        entityType: "task",
+        entityId: task.$id,
+        entityName: task.name,
+        description: "Task deleted"
+      });
 
       return c.json({ data: { $id: task.$id } });
     }
@@ -301,6 +320,47 @@ const app = new Hono()
       }
 
 
+      await createActivity({
+        databases,
+        workspaceId,
+        projectId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.TASKS,
+        action: EventAction.CREATED,
+        entityType: "task",
+        entityId: task.$id,
+        entityName: task.name,
+        description: "Task created"
+      });
+
+      if (assigneeId) {
+        const assigneeMember = await databases.getDocument(
+          DATABASE_ID,
+          MEMBERS_ID,
+          assigneeId,
+        );
+
+        if (assigneeMember.userId !== user.$id) {
+          await createNotification({
+            databases,
+            recipientId: assigneeMember.userId,
+            workspaceId,
+            projectId,
+            taskId: task.$id,
+            actorId: user.$id,
+            actorName: user.name,
+            type: NotificationType.TASK_ASSIGNED,
+            title: "Task assigned to you",
+            message: `${user.name} assigned "${task.name}" to you.`,
+            entityType: "task",
+            entityId: task.$id,
+            entityName: task.name,
+          });
+        }
+      }
+
       return c.json({ data: task });
     }
   )
@@ -376,6 +436,101 @@ const app = new Hono()
         }
       }
 
+      const changeDescriptions = [];
+      if (existingTask.status !== task.status) changeDescriptions.push(`Status changed from ${existingTask.status} to ${task.status}`);
+      if (existingTask.assigneeId !== task.assigneeId) changeDescriptions.push(`Assignee changed`);
+      if (existingTask.name !== task.name) changeDescriptions.push(`Name changed`);
+
+      const activityDescription = changeDescriptions.length > 0 ? changeDescriptions.join(", ") : "Task updated";
+
+      await createActivity({
+        databases,
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.TASKS,
+        action: EventAction.UPDATED,
+        entityType: "task",
+        entityId: task.$id,
+        entityName: task.name,
+        description: activityDescription,
+        metadata: JSON.stringify({ previousStatus: existingTask.status, newStatus: task.status })
+      });
+      console.log("🔔 Notification check:", {
+        oldAssignee: existingTask.assigneeId,
+        newAssignee: task.assigneeId,
+        currentUser: user.$id,
+      });
+
+      if (
+        existingTask.assigneeId !== task.assigneeId &&
+        task.assigneeId
+      ) {
+        const assigneeMember = await databases.getDocument(
+          DATABASE_ID,
+          MEMBERS_ID,
+          task.assigneeId,
+        );
+
+        console.log("🔔 Creating assignment notification:", {
+          memberId: task.assigneeId,
+          recipientUserId: assigneeMember.userId,
+          currentUser: user.$id,
+        });
+
+        if (assigneeMember.userId !== user.$id) {
+          await createNotification({
+            databases,
+            recipientId: assigneeMember.userId,
+            workspaceId: task.workspaceId,
+            projectId: task.projectId,
+            taskId: task.$id,
+            actorId: user.$id,
+            actorName: user.name,
+            type: NotificationType.TASK_ASSIGNED,
+            title: "Task assigned to you",
+            message: `${user.name} assigned "${task.name}" to you.`,
+            entityType: "task",
+            entityId: task.$id,
+            entityName: task.name,
+          });
+        }
+      } else if (
+        existingTask.status !== task.status &&
+        task.assigneeId
+      ) {
+        const assigneeMember = await databases.getDocument(
+          DATABASE_ID,
+          MEMBERS_ID,
+          task.assigneeId,
+        );
+
+        console.log("🔔 Creating status notification:", {
+          memberId: task.assigneeId,
+          recipientUserId: assigneeMember.userId,
+          currentUser: user.$id,
+        });
+
+        if (assigneeMember.userId !== user.$id) {
+          await createNotification({
+            databases,
+            recipientId: assigneeMember.userId,
+            workspaceId: task.workspaceId,
+            projectId: task.projectId,
+            taskId: task.$id,
+            actorId: user.$id,
+            actorName: user.name,
+            type: NotificationType.TASK_STATUS_CHANGED,
+            title: "Task status changed",
+            message: `${user.name} changed status of "${task.name}" to ${task.status}.`,
+            entityType: "task",
+            entityId: task.$id,
+            entityName: task.name,
+          });
+        }
+      }
 
       return c.json({ data: task });
     }
@@ -493,8 +648,21 @@ const app = new Hono()
         })
       );
 
+      await createActivity({
+        databases,
+        workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.TASKS,
+        action: EventAction.UPDATED,
+        entityType: "task",
+        description: `Bulk updated ${tasks.length} task(s) position/status`
+      });
+
       return c.json({ data: updatedTasks });
     }
   )
+
 
 export default app;

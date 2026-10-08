@@ -15,13 +15,22 @@ export const WorkspaceAvatar = ({
   name,
   className
 }: WorkspaceAvatarProps) => {
-  if (image) {
+  const hasValidImage =
+    Boolean(image) &&
+    typeof image === "string" &&
+    !image.startsWith("[object ") &&
+    (image.startsWith("data:") ||
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("/"));
+
+  if (hasValidImage) {
     return (
       <div className={cn(
         "size-10 relative rounded-md overflow-hidden",
         className,
       )}>
-        <Image src={image} alt={name} fill className="object-cover" />
+        <Image src={image as string} alt={name} fill className="object-cover" />
       </div>
     );
   }

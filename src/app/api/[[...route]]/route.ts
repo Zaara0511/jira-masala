@@ -6,6 +6,11 @@ import members from "@/features/members/server/route";
 import workspaces from "@/features/workspaces/server/route";
 import projects from "@/features/projects/server/route";
 import tasks from "@/features/tasks/server/route";
+import activities from "@/features/activities/server/route";
+import ai from "@/features/ai/server/route";
+import notifications from "@/features/notifications/server/route";
+import comments from "@/features/comments/server/route";
+import search from "@/features/search/server/route";
 
 const app = new Hono().basePath("/api");
 
@@ -16,6 +21,11 @@ const routes = app
   .route("/workspaces", workspaces)
   .route("/projects", projects)
   .route("/tasks", tasks)
+  .route("/activities", activities)
+  .route("/ai", ai)
+  .route("/notifications", notifications)
+  .route("/comments", comments)
+  .route("/search", search);
 
 export const GET = handle(app);
 export const POST = handle(app);

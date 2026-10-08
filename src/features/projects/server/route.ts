@@ -2,10 +2,13 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
+import { createActivity } from "@/features/activities/server/service";
+import { EventCategory, EventAction } from "@/features/activities/types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { TaskStatus } from "@/features/tasks/types";
 import { getMember } from "@/features/members/utils";
+import { analyzeProjectHealth } from "@/features/ai/server/project-health";
 
 import { DATABASE_ID, IMAGES_BUCKET_ID, PROJECTS_ID, TASKS_ID } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -45,12 +48,9 @@ const app = new Hono()
           image,
         );
 
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
+        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
+      } else {
+        uploadedImageUrl = image;
       }
 
       const project = await databases.createDocument(
@@ -63,6 +63,21 @@ const app = new Hono()
           workspaceId
         },
       );
+
+      await createActivity({
+        databases,
+        workspaceId,
+        projectId: project.$id,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.PROJECTS,
+        action: EventAction.CREATED,
+        entityType: "project",
+        entityId: project.$id,
+        entityName: project.name,
+        description: "Project created"
+      });
 
       return c.json({ data: project });
     }
@@ -167,15 +182,10 @@ const app = new Hono()
           image,
         );
 
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
+        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
       } else {
         uploadedImageUrl = image;
-      } 
+      }
 
       const project = await databases.updateDocument(
         DATABASE_ID,
@@ -186,6 +196,21 @@ const app = new Hono()
           imageUrl: uploadedImageUrl
         }
       );
+
+      await createActivity({
+        databases,
+        workspaceId: existingProject.workspaceId,
+        projectId: project.$id,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.PROJECTS,
+        action: EventAction.UPDATED,
+        entityType: "project",
+        entityId: project.$id,
+        entityName: project.name,
+        description: "Project updated"
+      });
 
       return c.json({ data: project });
     }
@@ -222,6 +247,21 @@ const app = new Hono()
         PROJECTS_ID,
         projectId,
       );
+
+      await createActivity({
+        databases,
+        workspaceId: existingProject.workspaceId,
+        projectId: existingProject.$id,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.PROJECTS,
+        action: EventAction.DELETED,
+        entityType: "project",
+        entityId: existingProject.$id,
+        entityName: existingProject.name,
+        description: "Project deleted"
+      });
 
       return c.json({ data: { $id: existingProject.$id } });
     }
@@ -400,6 +440,96 @@ const app = new Hono()
           overdueTaskDifference,
         },
       });
+    }
+  )
+  .get(
+    "/:projectId/health",
+    sessionMiddleware,
+    zValidator("query", z.object({ workspaceId: z.string().min(1) })),
+    async (c) => {
+      const databases = c.get("databases");
+      const user = c.get("user");
+      const { projectId } = c.req.param();
+      const { workspaceId } = c.req.valid("query");
+
+      // 1–2. Authenticate (sessionMiddleware) + verify workspace membership.
+      const member = await getMember({
+        databases,
+        workspaceId,
+        userId: user.$id,
+      });
+
+      if (!member) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      // 3–4. Fetch the project and verify it belongs to the requested
+      // workspace, so a projectId alone can never cross workspace boundaries.
+      let project: Project;
+      try {
+        project = await databases.getDocument<Project>(
+          DATABASE_ID,
+          PROJECTS_ID,
+          projectId,
+        );
+      } catch {
+        return c.json({ error: "Project not found" }, 404);
+      }
+
+      if (project.workspaceId !== workspaceId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      try {
+        // 5. Run the deterministic health engine (no business logic here).
+        const health = await analyzeProjectHealth(
+          databases,
+          workspaceId,
+          projectId,
+        );
+
+        return c.json({ data: health });
+      } catch (error) {
+        console.error("Failed to analyze project health:", error);
+        return c.json({ error: "Failed to analyze project health" }, 500);
+      }
+    }
+  )
+  .get(
+    "/:projectId/health",
+    sessionMiddleware,
+    async (c) => {
+      const databases = c.get("databases");
+      const user = c.get("user");
+      const { projectId } = c.req.param();
+
+      const project = await databases.getDocument<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        projectId
+      );
+
+      const member = await getMember({
+        databases,
+        workspaceId: project.workspaceId,
+        userId: user.$id,
+      });
+
+      if (!member) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const { analyzeProjectHealth } = await import(
+        "@/features/ai/server/project-health"
+      );
+
+      const healthResult = await analyzeProjectHealth(
+        databases,
+        project.workspaceId,
+        projectId,
+      );
+
+      return c.json({ data: healthResult });
     }
   )
 

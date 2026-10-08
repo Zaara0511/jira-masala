@@ -2,15 +2,17 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { OAuthProvider } from "node-appwrite";
-
-import { createAdminClient } from "@/lib/appwrite";
+import { Client, Account, OAuthProvider } from "node-appwrite";
 
 export async function signUpWithGithub() {
-	const { account } = await createAdminClient();
+	const client = new Client()
+		.setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+		.setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
 
-  const origin = headers().get("origin");
-  
+	const account = new Account(client);
+
+  const origin = headers().get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 	const redirectUrl = await account.createOAuth2Token(
 		OAuthProvider.Github,
 		`${origin}/oauth`,
@@ -21,9 +23,13 @@ export async function signUpWithGithub() {
 };
 
 export async function signUpWithGoogle() {
-	const { account } = await createAdminClient();
+	const client = new Client()
+		.setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+		.setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!);
 
-  const origin = headers().get("origin");
+	const account = new Account(client);
+
+  const origin = headers().get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 	const redirectUrl = await account.createOAuth2Token(
 		OAuthProvider.Google,

@@ -17,7 +17,16 @@ export const ProjectAvatar = ({
   className,
   fallbackClassName,
 }: ProjectAvatarProps) => {
-  if (image) {
+  const hasValidImage =
+    Boolean(image) &&
+    typeof image === "string" &&
+    !image.startsWith("[object ") &&
+    (image.startsWith("data:") ||
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("/"));
+
+  if (hasValidImage) {
     return (
       <div className={cn(
         "size-5 relative rounded-md overflow-hidden",

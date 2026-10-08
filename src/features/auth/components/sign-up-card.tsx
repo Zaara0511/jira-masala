@@ -10,11 +10,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signUpWithGithub, signUpWithGoogle } from "@/lib/oauth";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
   CardTitle
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,8 +29,12 @@ import {
 import { registerSchema } from "../schemas";
 import { useRegister } from "../api/use-register";
 
+import { useState } from "react";
+import { toast } from "sonner";
+
 export const SignUpCard = () => {
   const { mutate, isPending } = useRegister();
+  const [providerLoading, setProviderLoading] = useState<"google" | "github" | null>(null);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -43,6 +47,20 @@ export const SignUpCard = () => {
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
     mutate({ json: values });
+  };
+
+  const handleProvider = async (provider: "google" | "github") => {
+    setProviderLoading(provider);
+    try {
+      if (provider === "google") {
+        await signUpWithGoogle();
+      } else {
+        await signUpWithGithub();
+      }
+    } catch {
+      toast.error(`Unable to sign in with ${provider === "google" ? "Google" : "GitHub"}. Please try again.`);
+      setProviderLoading(null);
+    }
   };
 
   return (
@@ -116,7 +134,7 @@ export const SignUpCard = () => {
                 </FormItem>
               )}
             />
-            <Button disabled={isPending} size="lg" className="w-full">
+            <Button disabled={isPending || providerLoading !== null} size="lg" className="w-full">
               Register
             </Button>
           </form>
@@ -127,24 +145,24 @@ export const SignUpCard = () => {
       </div>
       <CardContent className="p-7 flex flex-col gap-y-4">
         <Button
-          onClick={() => signUpWithGoogle()}
-          disabled={isPending}
+          onClick={() => handleProvider("google")}
+          disabled={isPending || providerLoading !== null}
           variant="secondary"
           size="lg"
           className="w-full"
         >
           <FcGoogle className="mr-2 size-5" />
-          Login with Google
+          {providerLoading === "google" ? "Signing in with Google..." : "Login with Google"}
         </Button>
         <Button
-          onClick={() => signUpWithGithub()}
-          disabled={isPending}
+          onClick={() => handleProvider("github")}
+          disabled={isPending || providerLoading !== null}
           variant="secondary"
           size="lg"
           className="w-full"
         >
           <FaGithub className="mr-2 size-5" />
-          Login with Github
+          {providerLoading === "github" ? "Signing in with Github..." : "Login with Github"}
         </Button>
       </CardContent>
       <div className="px-7">

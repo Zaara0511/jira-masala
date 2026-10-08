@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SettingsIcon, UsersIcon } from "lucide-react";
+import { SettingsIcon, UsersIcon, ActivityIcon, Bell } from "lucide-react";
 import { GoCheckCircle, GoCheckCircleFill, GoHome, GoHomeFill } from "react-icons/go";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
@@ -23,6 +23,12 @@ const routes = [
     activeIcon: GoCheckCircleFill,
   },
   {
+    label: "Notifications",
+    href: "/notifications",
+    icon: Bell,
+    activeIcon: Bell,
+  },
+  {
     label: "Settings",
     href: "/settings",
     icon: SettingsIcon,
@@ -33,6 +39,12 @@ const routes = [
     href: "/members",
     icon: UsersIcon,
     activeIcon: UsersIcon,
+  },
+  {
+    label: "Activity",
+    href: "/activity",
+    icon: ActivityIcon,
+    activeIcon: ActivityIcon,
   },
 ];
 
@@ -46,7 +58,7 @@ export const Navigation = () => {
         const fullHref = `/workspaces/${workspaceId}${item.href}`
         const isActive = pathname === fullHref;
         const Icon = isActive ? item.activeIcon : item.icon;
-        
+
         return (
           <Link key={item.href} href={fullHref}>
             <div className={cn(

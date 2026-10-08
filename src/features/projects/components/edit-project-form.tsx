@@ -37,8 +37,8 @@ interface EditProjectFormProps {
 export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProps) => {
   const router = useRouter();
   const { mutate, isPending } = useUpdateProject();
-  const { 
-    mutate: deleteProject, 
+  const {
+    mutate: deleteProject,
     isPending: isDeletingProject
   } = useDeleteProject();
 
@@ -49,7 +49,7 @@ export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProp
   );
 
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const form = useForm<z.infer<typeof updateProjectSchema>>({
     resolver: zodResolver(updateProjectSchema),
     defaultValues: {
@@ -135,7 +135,11 @@ export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProp
                   render={({ field }) => (
                     <div className="flex flex-col gap-y-2">
                       <div className="flex items-center gap-x-5">
-                        {field.value ? (
+                        {field.value &&
+                        !(
+                          typeof field.value === "string" &&
+                          field.value.startsWith("[object ")
+                        ) ? (
                           <div className="size-[72px] relative rounded-md overflow-hidden">
                             <Image
                               alt="Logo"

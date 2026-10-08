@@ -2,6 +2,8 @@ import { z } from "zod";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
+import { createActivity } from "@/features/activities/server/service";
+import { EventCategory, EventAction } from "@/features/activities/types";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { MemberRole } from "@/features/members/types";
@@ -83,12 +85,12 @@ const app = new Hono()
         workspaceId,
       );
 
-      return c.json({ 
-        data: { 
-          $id: workspace.$id, 
-          name: workspace.name, 
+      return c.json({
+        data: {
+          $id: workspace.$id,
+          name: workspace.name,
           imageUrl: workspace.imageUrl
-        } 
+        }
       });
     }
   )
@@ -112,12 +114,7 @@ const app = new Hono()
           image,
         );
 
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
+        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
       }
 
       const workspace = await databases.createDocument(
@@ -142,6 +139,20 @@ const app = new Hono()
           role: MemberRole.ADMIN,
         },
       );
+
+      await createActivity({
+        databases,
+        workspaceId: workspace.$id,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.WORKSPACES,
+        action: EventAction.CREATED,
+        entityType: "workspace",
+        entityId: workspace.$id,
+        entityName: workspace.name,
+        description: "Workspace created"
+      });
 
       return c.json({ data: workspace });
     }
@@ -177,15 +188,10 @@ const app = new Hono()
           image,
         );
 
-        const arrayBuffer = await storage.getFilePreview(
-          IMAGES_BUCKET_ID,
-          file.$id,
-        );
-
-        uploadedImageUrl = `data:image/png;base64,${Buffer.from(arrayBuffer).toString("base64")}`;
+        uploadedImageUrl = `${process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${IMAGES_BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
       } else {
         uploadedImageUrl = image;
-      } 
+      }
 
       const workspace = await databases.updateDocument(
         DATABASE_ID,
@@ -196,6 +202,20 @@ const app = new Hono()
           imageUrl: uploadedImageUrl
         }
       );
+
+      await createActivity({
+        databases,
+        workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.WORKSPACES,
+        action: EventAction.UPDATED,
+        entityType: "workspace",
+        entityId: workspace.$id,
+        entityName: workspace.name,
+        description: "Workspace settings updated"
+      });
 
       return c.json({ data: workspace });
     }
@@ -227,6 +247,19 @@ const app = new Hono()
         workspaceId,
       );
 
+      await createActivity({
+        databases,
+        workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.WORKSPACES,
+        action: EventAction.DELETED,
+        entityType: "workspace",
+        entityId: workspaceId,
+        description: "Workspace deleted"
+      });
+
       return c.json({ data: { $id: workspaceId } });
     }
   )
@@ -257,6 +290,19 @@ const app = new Hono()
           inviteCode: generateInviteCode(6),
         },
       );
+
+      await createActivity({
+        databases,
+        workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.INVITES,
+        action: "regenerated",
+        entityType: "workspace",
+        entityId: workspaceId,
+        description: "Invite code regenerated"
+      });
 
       return c.json({ data: workspace });
     }
@@ -302,6 +348,19 @@ const app = new Hono()
           role: MemberRole.MEMBER,
         },
       );
+
+      await createActivity({
+        databases,
+        workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.MEMBERS,
+        action: "joined",
+        entityType: "member",
+        entityId: user.$id,
+        description: "Joined workspace via invite"
+      });
 
       return c.json({ data: workspace });
     }

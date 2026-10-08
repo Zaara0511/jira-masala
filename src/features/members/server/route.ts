@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/appwrite";
 import { DATABASE_ID, MEMBERS_ID } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
+import { createActivity } from "@/features/activities/server/service";
+import { EventCategory, EventAction } from "@/features/activities/types";
+
 import { getMember } from "../utils";
 import { Member, MemberRole } from "../types";
 
@@ -86,11 +89,11 @@ const app = new Hono()
       if (!member) {
         return c.json({ error: "Unauthorized" }, 401);
       }
-      
+
       if (member.$id !== memberToDelete.$id && member.role !== MemberRole.ADMIN) {
         return c.json({ error: "Unauthorized" }, 401);
       }
-      
+
       if (allMembersInWorkspace.total === 1) {
         return c.json({ error: "Cannot delete the only member" }, 400);
       }
@@ -100,6 +103,19 @@ const app = new Hono()
         MEMBERS_ID,
         memberId,
       );
+
+      await createActivity({
+        databases,
+        workspaceId: memberToDelete.workspaceId,
+        userId: user.$id,
+        userName: user.name,
+        userEmail: user.email,
+        eventCategory: EventCategory.MEMBERS,
+        action: EventAction.REMOVED,
+        entityType: "member",
+        entityId: memberToDelete.$id,
+        description: "Member removed from workspace"
+      });
 
       return c.json({ data: { $id: memberToDelete.$id } });
     }
@@ -141,11 +157,11 @@ const app = new Hono()
       if (!member) {
         return c.json({ error: "Unauthorized" }, 401);
       }
-      
+
       if (member.role !== MemberRole.ADMIN) {
         return c.json({ error: "Unauthorized" }, 401);
       }
-      
+
       if (role && role !== memberToUpdate.role && allMembersInWorkspace.total === 1) {
         return c.json({ error: "Cannot downgrade the only member" }, 400);
       }
@@ -164,6 +180,30 @@ const app = new Hono()
         memberId,
         updateData,
       );
+
+      const changeDescriptions = [];
+      if (role !== undefined && role !== memberToUpdate.role) {
+        changeDescriptions.push(`Role changed from ${memberToUpdate.role} to ${role}`);
+      }
+      if (designation !== undefined && designation !== memberToUpdate.designation) {
+        changeDescriptions.push(`Designation updated`);
+      }
+
+      if (changeDescriptions.length > 0) {
+        await createActivity({
+          databases,
+          workspaceId: memberToUpdate.workspaceId,
+          userId: user.$id,
+          userName: user.name,
+          userEmail: user.email,
+          eventCategory: EventCategory.MEMBERS,
+          action: role !== undefined && role !== memberToUpdate.role ? EventAction.ROLE_CHANGED : EventAction.UPDATED,
+          entityType: "member",
+          entityId: memberToUpdate.$id,
+          description: changeDescriptions.join(", "),
+          metadata: JSON.stringify(updateData)
+        });
+      }
 
       return c.json({ data: { $id: memberToUpdate.$id } });
     }

@@ -13,7 +13,7 @@ export const createTaskSchema = z.object({
   weight: z
     .preprocess(
       (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
-      z.number().int().min(1).max(5).optional()
+      z.number().int().min(1).max(13).optional()
     ),
 });
 
