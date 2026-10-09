@@ -6,15 +6,15 @@ import {
   CheckSquare, Folder, Users, Settings,
   Shield, Building, Mail, Activity as ActivityIcon,
   Search,
-  MoreVertical,
-  X
+  MoreVertical
 } from "lucide-react";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetActivities } from "../api/use-get-activities";
+import { Activity } from "../types";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ export const ActivityList = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
 
-  const [selectedActivity, setSelectedActivity] = useState<any | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
   const { data, isLoading, isError, refetch } = useGetActivities({
     workspaceId,
@@ -59,7 +59,7 @@ export const ActivityList = () => {
 
   // Search filtering happens on client-side for simplicity since there is no server-side search param implemented.
   // In a robust implementation, search should be passed to useGetActivities.
-  const filteredActivities = activities.filter((activity: any) => {
+  const filteredActivities = activities.filter((activity: Activity) => {
     if (!search) return true;
     const lowerSearch = search.toLowerCase();
     return (
@@ -191,7 +191,7 @@ export const ActivityList = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredActivities.map((activity: any) => (
+                  filteredActivities.map((activity: Activity) => (
                     <TableRow key={activity.$id}>
                       <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
                         {formatDate(activity.$createdAt)}

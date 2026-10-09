@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Send, Edit2, Trash2, AtSign } from "lucide-react";
+import { Send, Edit2, Trash2 } from "lucide-react";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useTaskId } from "@/features/tasks/hooks/use-task-id";
@@ -11,6 +11,7 @@ import { useCreateComment } from "../api/use-create-comment";
 import { useUpdateComment } from "../api/use-update-comment";
 import { useDeleteComment } from "../api/use-delete-comment";
 import { useGetMembers } from "@/features/members/api/use-get-members";
+import { Comment } from "../types";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,10 +20,10 @@ import { DottedSeparator } from "@/components/dotted-separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CommentsSectionProps {
-  projectId: string;
+  projectId?: string;
 }
 
-export const CommentsSection = ({ projectId }: CommentsSectionProps) => {
+export const CommentsSection = ({}: CommentsSectionProps) => {
   const workspaceId = useWorkspaceId();
   const taskId = useTaskId();
 
@@ -192,7 +193,7 @@ export const CommentsSection = ({ projectId }: CommentsSectionProps) => {
               No comments yet. Start the conversation!
             </p>
           ) : (
-            comments?.documents?.map((comment: any) => (
+            comments?.documents?.map((comment: Comment) => (
               <div key={comment.$id} className="flex gap-x-4">
                 <Avatar className="w-8 h-8">
                   <AvatarFallback className="text-xs bg-blue-600 text-white font-semibold">

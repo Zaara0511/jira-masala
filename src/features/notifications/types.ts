@@ -6,6 +6,7 @@ export enum NotificationType {
   COMMENT_MENTIONED = "COMMENT_MENTIONED",
   COMMENT_REPLIED = "COMMENT_REPLIED",
   TASK_STATUS_CHANGED = "TASK_STATUS_CHANGED",
+  PROJECT_UPDATED = "PROJECT_UPDATED",
 }
 
 export type Notification = Models.Document & {
@@ -15,7 +16,7 @@ export type Notification = Models.Document & {
   taskId?: string;
   actorId: string;
   actorName: string;
-  type: NotificationType;
+  type: NotificationType | string;
   title: string;
   message: string;
   entityType: string;

@@ -8,6 +8,7 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetNotifications } from "@/features/notifications/api/use-get-notifications";
 import { useMarkNotificationRead } from "@/features/notifications/api/use-mark-notification-read";
 import { useMarkAllNotificationsRead } from "@/features/notifications/api/use-mark-all-notifications-read";
+import { Notification } from "@/features/notifications/types";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,9 @@ const NotificationsPage = () => {
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllNotificationsRead();
 
   const notifications = notificationsData?.documents || [];
-  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+  const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = (notification: Notification) => {
     if (!notification.isRead) {
       markRead({ param: { notificationId: notification.$id } });
     }
@@ -76,7 +77,7 @@ const NotificationsPage = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-y-4">
-              {notifications.map((notification: any) => {
+              {notifications.map((notification: Notification) => {
                 const isUnread = !notification.isRead;
 
                 let Icon = Bell;

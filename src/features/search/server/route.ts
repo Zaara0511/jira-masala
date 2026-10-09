@@ -5,6 +5,10 @@ import { Query } from "node-appwrite";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { DATABASE_ID, TASKS_ID, PROJECTS_ID, MEMBERS_ID, COMMENTS_ID } from "@/config";
+import { Task } from "@/features/tasks/types";
+import { Project } from "@/features/projects/types";
+import { Comment } from "@/features/comments/types";
+import { SearchResult } from "../types";
 
 const app = new Hono()
   .get(
@@ -33,11 +37,11 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const results: any[] = [];
+      const results: SearchResult[] = [];
 
       try {
         // Search tasks
-        const tasks = await databases.listDocuments(
+        const tasks = await databases.listDocuments<Task>(
           DATABASE_ID,
           TASKS_ID,
           [
@@ -51,7 +55,7 @@ const app = new Hono()
         });
 
         // Search projects
-        const projects = await databases.listDocuments(
+        const projects = await databases.listDocuments<Project>(
           DATABASE_ID,
           PROJECTS_ID,
           [
@@ -66,7 +70,7 @@ const app = new Hono()
 
         // Search comments (only if query is long enough to avoid huge scans)
         if (query.length >= 3) {
-          const comments = await databases.listDocuments(
+          const comments = await databases.listDocuments<Comment>(
             DATABASE_ID,
             COMMENTS_ID,
             [

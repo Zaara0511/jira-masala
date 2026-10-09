@@ -7,6 +7,7 @@ import { useDebounce } from "react-use";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGlobalSearch } from "../api/use-global-search";
+import { SearchResult } from "../types";
 
 import {
   Dialog,
@@ -47,7 +48,7 @@ export const GlobalSearch = () => {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const handleSelect = (result: any) => {
+  const handleSelect = (result: SearchResult) => {
     setOpen(false);
     if (result.type === "task") {
       router.push(`/workspaces/${workspaceId}/tasks/${result.id}`);
@@ -92,7 +93,7 @@ export const GlobalSearch = () => {
               </div>
             ) : results?.length === 0 && query.length >= 2 ? (
               <div className="p-8 text-center text-sm text-neutral-500">
-                No results found for "{query}"
+                No results found for &quot;{query}&quot;
               </div>
             ) : !query || query.length < 2 ? (
               <div className="p-8 text-center text-sm text-neutral-500">
@@ -100,7 +101,7 @@ export const GlobalSearch = () => {
               </div>
             ) : (
               <div className="p-2 flex flex-col gap-1">
-                {results?.map((result: any, i: number) => (
+                {results?.map((result: SearchResult, i: number) => (
                   <div
                     key={result.id + i}
                     onClick={() => handleSelect(result)}

@@ -9,6 +9,7 @@ import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetNotifications } from "../api/use-get-notifications";
 import { useMarkNotificationRead } from "../api/use-mark-notification-read";
 import { useMarkAllNotificationsRead } from "../api/use-mark-all-notifications-read";
+import { Notification } from "../types";
 
 import {
    DropdownMenu,
@@ -31,7 +32,7 @@ export const NotificationDropdown = () => {
   const notifications = notificationsData?.documents || [];
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-const handleNotificationClick = (notification: any) => {
+const handleNotificationClick = (notification: Notification) => {
   // Mark notification as read
   if (!notification.isRead) {
     markRead(
