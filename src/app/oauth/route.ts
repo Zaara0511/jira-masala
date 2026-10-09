@@ -5,6 +5,19 @@ import { AUTH_COOKIE } from "@/features/auth/constants";
 
 import { createAdminClient } from "@/lib/appwrite";
 
+function getAppUrl(request: NextRequest): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (envUrl) {
+    return envUrl.replace(/\/+$/, "");
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return request.nextUrl.origin.replace(/\/+$/, "");
+  }
+
+  return "https://jira-masala.onrender.com";
+}
+
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get("userId");
   const secret = request.nextUrl.searchParams.get("secret");
@@ -24,5 +37,7 @@ export async function GET(request: NextRequest) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  return NextResponse.redirect(`${request.nextUrl.origin}/`);
+  const baseUrl = getAppUrl(request);
+
+  return NextResponse.redirect(`${baseUrl}/`);
 }
